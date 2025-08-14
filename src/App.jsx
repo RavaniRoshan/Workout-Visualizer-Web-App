@@ -1,9 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import anime from 'animejs';
+import ErrorBoundary from './ErrorBoundary';
 
 const App = () => {
   const [motivation, setMotivation] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isVisible, setIsVisible] = useState(false);
+  
+  // Refs for animation targets
+  const titleRef = useRef(null);
+  const motivationRef = useRef(null);
+  const exercisesRef = useRef(null);
+
+  useEffect(() => {
+    setIsVisible(true);
+    // Animate title on mount
+    anime({
+      targets: titleRef.current,
+      translateY: [-50, 0],
+      opacity: [0, 1],
+      duration: 1000,
+      easing: 'easeOutElastic(1, .8)'
+    });
+
+    // Animate exercise cards
+    anime({
+      targets: exercisesRef.current.querySelectorAll('.exercise-card'),
+      translateX: [-50, 0],
+      opacity: [0, 1],
+      delay: anime.stagger(100),
+      duration: 800,
+      easing: 'easeOutCubic'
+    });
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,14 +50,31 @@ const App = () => {
   };
 
   const getMotivationalMessage = async () => {
-    setLoading(true);
-    setMotivation('');
-    const prompt = "Give me a short, inspiring motivational quote or message (1-2 sentences) for an agile, athletic workout. Focus on discipline, consistency, and a lean, powerful physique like Tom Cruise in action movies. Use an encouraging and confident tone.";
-    let chatHistory = [];
-    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-    const payload = { contents: chatHistory };
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    try {
+      setLoading(true);
+      setMotivation('');
+      
+      // Animate the button while loading
+      anime({
+        targets: '.motivation-button',
+        scale: [1, 0.95],
+        duration: 200,
+        direction: 'alternate',
+        loop: true,
+        easing: 'easeInOutSine'
+      });
+
+      const prompt = "Give me a short, inspiring motivational quote or message (1-2 sentences) for an agile, athletic workout. Focus on discipline, consistency, and a lean, powerful physique like Tom Cruise in action movies. Use an encouraging and confident tone.";
+      let chatHistory = [];
+      chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+      const payload = { contents: chatHistory };
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+      
+      if (!apiKey) {
+        throw new Error('API key is not configured. Please set up your API key in the environment variables.');
+      }
+
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
     try {
       let response;
@@ -158,15 +205,44 @@ const App = () => {
   };
 
   const ExerciseCard = ({ exercise }) => {
+    const cardRef = useRef(null);
+    const [imageError, setImageError] = useState(false);
+
     const generatePlaceholderImageUrl = (text) => {
       const encodedText = encodeURIComponent(text.toUpperCase().replace(/\s/g, '\n'));
       return `https://placehold.co/150x150/e2e8f0/1a202c?text=${encodedText}`;
     };
   
     const imageUrl = generatePlaceholderImageUrl(exercise.imagePrompt);
+
+    const handleDetailsClick = () => {
+      anime({
+        targets: cardRef.current.querySelector('.details-content'),
+        height: ['0px', 'auto'],
+        opacity: [0, 1],
+        duration: 400,
+        easing: 'easeOutCubic'
+      });
+    };
   
     return (
-      <div className="bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200">
+      <div ref={cardRef} className="exercise-card bg-white p-4 rounded-lg shadow-md mb-4 border border-gray-200 transform hover:scale-102 transition-transform duration-200"
+           onMouseEnter={() => {
+             anime({
+               targets: cardRef.current,
+               scale: 1.02,
+               duration: 200,
+               easing: 'easeOutCubic'
+             });
+           }}
+           onMouseLeave={() => {
+             anime({
+               targets: cardRef.current,
+               scale: 1,
+               duration: 200,
+               easing: 'easeOutCubic'
+             });
+           }}>
         <h3 className="text-xl font-bold text-gray-800">{exercise.name}</h3>
         {imageUrl && (
           <img src={imageUrl} alt={exercise.name} className="my-4 rounded-lg shadow-inner" />
@@ -199,11 +275,12 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-gray-900 mb-2">
-          Workout Visualizer
-        </h1>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gray-100 p-4 sm:p-8 font-sans">
+        <div className="max-w-4xl mx-auto">
+          <h1 ref={titleRef} className="text-4xl sm:text-5xl font-extrabold text-center text-gray-900 mb-2 opacity-0">
+            Workout Visualizer
+          </h1>
         <p className="text-center text-lg text-gray-600 mb-6">{getGreeting()}! Your workout awaits.</p>
 
         <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8">

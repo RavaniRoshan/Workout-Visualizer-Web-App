@@ -5,7 +5,8 @@
   "homepage": "https://ravaniroshan.github.io/Workout-Visualizer-Web-App",
   "scripts": {
     "predeploy": "echo 'Ready to deploy'",
-    "deploy": "gh-pages -d ."
+    "deploy": "gh-pages -d . -u \"github-actions-bot <support+actions@github.com>\"",
+    "build": "echo 'No build step required'"
   },
   "dependencies": {
     "animejs": "^4.1.3",

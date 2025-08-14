@@ -50,12 +50,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Deploy
+      - name: Build React App
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Ensure we're on a clean main branch
-          git checkout main
-          
-          # Deploy to gh-pages branch
-          npx gh-pages -d . -u "github-actions-bot <support+actions@github.com>"
+          npx gh-pages -d build -u "github-actions-bot <support+actions@github.com>"

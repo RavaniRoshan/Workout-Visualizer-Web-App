@@ -2,6 +2,7 @@
   "name": "workout-visualizer",
   "version": "1.0.0",
   "description": "A smart workout companion that provides guided exercises and motivational messages",
+  "homepage": "https://ravaniroshan.github.io/Workout-Visualizer-Web-App",
   "scripts": {
     "predeploy": "echo 'Ready to deploy'",
     "deploy": "gh-pages -d ."
